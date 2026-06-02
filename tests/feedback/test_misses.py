@@ -233,18 +233,18 @@ def test_filter_top_misses_handles_zero_and_empty() -> None:
 
 
 def test_to_benchmark_scenario_carries_rubric() -> None:
-    miss = {
-        "miss_id": "m-1",
-        "run_id": "r-1",
-        "alert_name": "checkout-api 5xx",
-        "pipeline_name": "checkout/api",
-        "severity": "critical",
-        "timestamp": "2026-06-02T10:00:00+00:00",
-        "taxonomy": "retrieval_gap",
-        "taxonomy_detail": "missed the canary deploy",
-        "root_cause": "Bad deploy at 09:42",
-        "root_cause_category": "deploy",
-    }
+    miss = MissRecord(
+        miss_id="m-1",
+        run_id="r-1",
+        alert_name="checkout-api 5xx",
+        pipeline_name="checkout/api",
+        severity="critical",
+        timestamp="2026-06-02T10:00:00+00:00",
+        taxonomy="retrieval_gap",
+        taxonomy_detail="missed the canary deploy",
+        root_cause="Bad deploy at 09:42",
+        root_cause_category="deploy",
+    )
     scenario = to_benchmark_scenario(miss)
 
     assert scenario["alert_name"] == "checkout-api 5xx"
@@ -253,9 +253,46 @@ def test_to_benchmark_scenario_carries_rubric() -> None:
     assert scenario["severity"] == "critical"
     assert scenario["_meta"]["miss_id"] == "m-1"
     assert scenario["_meta"]["taxonomy"] == "retrieval_gap"
-    rubric = scenario["_meta"]["scoring_points"]
+
+    # The rubric MUST live at commonAnnotations.scoring_points — that is
+    # where extract_openrca_scoring_points reads it and where
+    # strip_scoring_points_from_alert removes it before the agent sees the
+    # alert. Anywhere else and either the judge misses the rubric or the
+    # agent gets handed the answer.
+    rubric = scenario["commonAnnotations"]["scoring_points"]
     assert rubric["expected_root_cause"] == "Bad deploy at 09:42"
+    assert rubric["expected_category"] == "deploy"
     assert rubric["miss_notes"] == "missed the canary deploy"
+    assert "scoring_points" not in scenario["_meta"]
+
+
+def test_to_benchmark_scenario_is_strippable_for_blind_agent_runs() -> None:
+    """Confirm the produced scenario is compatible with the existing
+    strip_scoring_points_from_alert helper — i.e. the rubric ends up where
+    the helper expects and is actually removed for non-evaluate runs."""
+    from app.integrations.opensre import (
+        extract_openrca_scoring_points,
+        strip_scoring_points_from_alert,
+    )
+
+    miss = MissRecord(
+        miss_id="m-1",
+        alert_name="checkout-api 5xx",
+        taxonomy="retrieval_gap",
+        taxonomy_detail="missed the canary deploy",
+        root_cause="Bad deploy at 09:42",
+        root_cause_category="deploy",
+    )
+    scenario = to_benchmark_scenario(miss)
+
+    # Judge can read the rubric.
+    rubric_text = extract_openrca_scoring_points(scenario)
+    assert "Bad deploy at 09:42" in rubric_text
+
+    # Strip removes it cleanly — agent does not see the answer.
+    blind = strip_scoring_points_from_alert(scenario)
+    assert "scoring_points" not in blind["commonAnnotations"]
+    assert extract_openrca_scoring_points(blind) == ""
 
 
 def test_export_scenarios_handles_json_null_alert_name_and_taxonomy(tmp_path: Path) -> None:

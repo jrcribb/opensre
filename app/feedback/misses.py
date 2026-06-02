@@ -283,8 +283,14 @@ def to_benchmark_scenario(miss: MissRecord) -> dict[str, Any]:
 
     The shape mirrors ``tests/benchmarks/openrca_scenarios/*/alert.json`` so
     the existing benchmark runner can consume the exported scenarios with no
-    adapter changes. The ``_meta.scoring_points`` field carries the human
-    taxonomy detail so the rubric stays attached to the regression.
+    adapter changes.
+
+    The grading rubric lives at ``commonAnnotations.scoring_points`` — that is
+    where :func:`app.integrations.opensre.extract_openrca_scoring_points`
+    looks for it (``opensre investigate --evaluate``), and where
+    :func:`app.integrations.opensre.strip_scoring_points_from_alert` strips it
+    before handing the alert to the agent. Putting it under ``_meta`` would
+    both invisible to the judge *and* leak the answer to the agent.
     """
     miss_id = miss.get("miss_id", str(uuid.uuid4()))
     alert_name = miss.get("alert_name") or "production miss"
@@ -300,11 +306,6 @@ def to_benchmark_scenario(miss: MissRecord) -> dict[str, Any]:
             "original_run_id": miss.get("run_id", ""),
             "captured_at": miss.get("timestamp", ""),
             "taxonomy": taxonomy,
-            "scoring_points": {
-                "expected_root_cause": root_cause,
-                "expected_category": miss.get("root_cause_category", ""),
-                "miss_notes": detail,
-            },
         },
         "title": f"[Regression] {alert_name}",
         "alert_name": alert_name,
@@ -322,6 +323,11 @@ def to_benchmark_scenario(miss: MissRecord) -> dict[str, Any]:
             "summary": detail or alert_name,
             "miss_id": miss_id,
             "taxonomy": taxonomy,
+            "scoring_points": {
+                "expected_root_cause": root_cause,
+                "expected_category": miss.get("root_cause_category", ""),
+                "miss_notes": detail,
+            },
         },
     }
 
