@@ -258,6 +258,27 @@ def test_to_benchmark_scenario_carries_rubric() -> None:
     assert rubric["miss_notes"] == "missed the canary deploy"
 
 
+def test_export_scenarios_handles_json_null_alert_name_and_taxonomy(tmp_path: Path) -> None:
+    """A JSON null in misses.jsonl returns Python None from dict.get — the
+    export path must not crash _slugify's re.sub on those values."""
+    misses: list[MissRecord] = [
+        MissRecord(
+            miss_id="m-1",
+            alert_name=None,  # type: ignore[typeddict-item]
+            taxonomy=None,  # type: ignore[typeddict-item]
+            timestamp="2026-06-02T10:00:00+00:00",
+            root_cause="rc",
+        ),
+    ]
+    out = tmp_path / "scenarios"
+
+    written = export_scenarios(misses, out)
+
+    assert len(written) == 1
+    # Slug falls back to the index + "unknown" taxonomy rather than crashing.
+    assert written[0].parent.name == "0001_miss-0001_unknown"
+
+
 def test_export_scenarios_writes_per_case_directories(tmp_path: Path) -> None:
     misses: list[MissRecord] = [
         MissRecord(

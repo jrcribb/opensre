@@ -340,8 +340,10 @@ def export_scenarios(
     out_dir.mkdir(parents=True, exist_ok=True)
 
     for index, miss in enumerate(misses, start=1):
-        slug = _slugify(miss.get("alert_name", ""), fallback=f"miss-{index:04d}")
-        taxonomy_slug = _slugify(miss.get("taxonomy", "unknown"), fallback="unknown")
+        # ``or`` rather than dict.get default: a JSON null stored on disk
+        # returns Python None, which would crash _slugify's re.sub.
+        slug = _slugify(miss.get("alert_name") or "", fallback=f"miss-{index:04d}")
+        taxonomy_slug = _slugify(miss.get("taxonomy") or "unknown", fallback="unknown")
         case_dir = out_dir / f"{index:04d}_{slug}_{taxonomy_slug}"
         case_dir.mkdir(parents=True, exist_ok=True)
 
