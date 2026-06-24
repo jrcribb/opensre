@@ -61,15 +61,15 @@ def run_connected_investigation(
     state_any = cast(dict[str, Any], state)
 
     try:
-        _merge(state_any, {"resolved_integrations": resolve_integrations(state)})
+        _merge(state_any, resolve_integrations(state))
 
         _merge(state_any, extract_alert(state))
         if state_any.get("is_noise"):
             return cast(AgentState, state_any)
 
         _merge(state_any, plan_actions(cast(AgentState, state_any)))
-        _merge(state_any, agent_class().run(state_any))
-        _merge(state_any, diagnose(state_any))
+        _merge(state_any, agent_class().run(cast(AgentState, state_any)))
+        _merge(state_any, diagnose(cast(AgentState, state_any)))
         _merge(
             state_any,
             node_correlate_upstream(
