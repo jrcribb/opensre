@@ -7,11 +7,17 @@ import re
 import select
 import sys
 
+# A leaked cursor-position reply is ``ESC[row;colR`` (8-bit CSI ``\x9b`` too); when it
+# leaks into the input stream the ESC and/or ``[`` introducer can be lost. The
+# introducer-less branches below are constrained so they only fire on genuine CPR
+# context. Without that constraint they can silently strip legitimate input such as
+# ``5R3``, ``12;34R okay`` or ``12;34R5 nodes``.
 _CPR_SEQUENCE_RE = re.compile(
-    r"(?:\x1b\[|\x9b)\d{1,4};\d{1,4}R"  # ESC [ row ; col R
+    r"(?:\x1b\[|\x9b)\d{1,4};\d{1,4}R"  # ESC [ row ; col R (introducer present)
     r"|\[\d{1,4};\d{1,4}R"  # [row;colR without ESC (leaked into input)
-    r"|\d{1,4};\d{1,4}R"  # row;colR without ESC or [
-    r"|\d{1,4}R(?=[\[\d])"  # trailing rowR before another CPR fragment
+    r"|\d{1,4};\d{1,4}R(?=[\[\x1b\x9b]|\d{1,4};\d{1,4}R)"  # bare row;colR before another fragment
+    r"|\d{1,4}R(?=\[|\x1b|\x9b|\d{1,4};\d{1,4}R)"  # bare rowR before another fragment
+    r"|\d{1,4};\d{1,4}R$"  # bare row;colR alone at end of the line
 )
 _CPR_ESCAPED_SEQUENCE_RE = re.compile(r"(?:\x1b\[|\x9b)\d{1,4};\d{1,4}R")
 
