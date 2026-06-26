@@ -15,7 +15,7 @@ from interactive_shell.harness.orchestration.llm_action_planner.prompting import
 from interactive_shell.harness.orchestration.llm_action_planner.system_prompt import (
     _SYSTEM_PROMPT_BASE,
 )
-from interactive_shell.state.conversation_history import NO_HISTORY_PLACEHOLDER
+from interactive_shell.harness.state.conversation_history import NO_HISTORY_PLACEHOLDER
 
 
 @dataclass

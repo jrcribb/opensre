@@ -37,7 +37,7 @@ from interactive_shell.chat.system_prompt import (
 from interactive_shell.runtime import ReplSession
 from interactive_shell.runtime.session import SUGGESTED_PROMPT_AFTER_FAILED_SYNTHETIC_TEST
 from interactive_shell.runtime.token_accounting import build_llm_run_info
-from interactive_shell.state.conversation_history import (
+from interactive_shell.harness.state.conversation_history import (
     MAX_CONVERSATION_MESSAGES,
     format_recent_conversation,
 )

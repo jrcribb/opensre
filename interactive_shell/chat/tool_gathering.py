@@ -31,7 +31,7 @@ from rich.markup import escape
 
 from core.domain.alerts.alert_source import SECONDARY_TOOL_SOURCES
 from interactive_shell.runtime.session import ReplSession
-from interactive_shell.state.conversation_history import (
+from interactive_shell.harness.state.conversation_history import (
     NO_HISTORY_PLACEHOLDER,
     format_recent_conversation,
 )
@@ -162,7 +162,7 @@ def _persist_tool_calls(session: ReplSession, executed: list[tuple[Any, Any]]) -
     are redacted and bounded before writing; failures are swallowed so logging
     never breaks the turn.
     """
-    from interactive_shell.state.sessions.store import SessionStore
+    from interactive_shell.harness.state.sessions.store import SessionStore
     from platform.observability.tool_trace import redact_sensitive
 
     for tc, output in executed:

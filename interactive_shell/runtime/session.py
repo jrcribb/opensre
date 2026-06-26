@@ -363,7 +363,7 @@ class ReplSession:
 
         self.history.append(entry)
 
-        from interactive_shell.state.sessions.store import SessionStore
+        from interactive_shell.harness.state.sessions.store import SessionStore
 
         SessionStore.append_turn(self, kind, text)
 
@@ -376,7 +376,7 @@ class ReplSession:
         """
         # Record to history with alert text
         self.history.append({"type": "incoming_alert", "text": alert.text, "ok": True})
-        from interactive_shell.state.sessions.store import SessionStore
+        from interactive_shell.harness.state.sessions.store import SessionStore
 
         SessionStore.append_turn(self, "incoming_alert", alert.text)
 
@@ -532,7 +532,7 @@ class ReplSession:
         This prevents CLI-agent turns from an earlier interaction from bleeding
         into the follow-up grounding context of a new investigation.
         """
-        from interactive_shell.state.sessions.store import SessionStore
+        from interactive_shell.harness.state.sessions.store import SessionStore
 
         self.last_state = state
         self.follow_up_messages.clear()

@@ -15,7 +15,7 @@ from interactive_shell.runtime.dispatch import run_initial_input
 from interactive_shell.runtime.loop import run_interactive
 from interactive_shell.runtime.session import ReplSession
 from interactive_shell.runtime.tasks import TaskRegistry
-from interactive_shell.state.sessions.store import SessionStore
+from interactive_shell.harness.state.sessions.store import SessionStore
 from interactive_shell.ui import DIM, render_banner
 from interactive_shell.ui import prompt_surface as _prompt_surface
 from tools.fleet_monitoring.sweep import run_startup_sweep

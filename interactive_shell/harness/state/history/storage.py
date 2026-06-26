@@ -6,7 +6,7 @@ from pathlib import Path
 
 from prompt_toolkit.history import FileHistory, History, InMemoryHistory
 
-from interactive_shell.state.history.policy import (
+from interactive_shell.harness.state.history.policy import (
     HistoryPolicy,
     RedactingFileHistory,
 )

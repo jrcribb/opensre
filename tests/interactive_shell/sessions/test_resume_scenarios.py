@@ -11,8 +11,8 @@ import pytest
 from rich.console import Console
 
 from interactive_shell.command_registry import dispatch_slash
+from interactive_shell.harness.state.sessions.store import SessionStore
 from interactive_shell.runtime.session import ReplSession
-from interactive_shell.state.sessions.store import SessionStore
 
 
 def _capture() -> tuple[Console, io.StringIO]:
@@ -70,7 +70,7 @@ def isolated_sessions(tmp_path: Path) -> Path:
     directory = tmp_path / "sessions"
     directory.mkdir()
     with patch(
-        "interactive_shell.state.sessions.store._sessions_dir",
+        "interactive_shell.harness.state.sessions.store._sessions_dir",
         return_value=directory,
     ):
         yield directory

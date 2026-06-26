@@ -6,7 +6,7 @@ from typing import Any, Protocol
 
 
 class SessionPersistenceSource(Protocol):
-    """Fields read by :class:`~interactive_shell.state.sessions.store.SessionStore`."""
+    """Fields read by :class:`~interactive_shell.harness.state.sessions.store.SessionStore`."""
 
     session_id: str
     started_at: float

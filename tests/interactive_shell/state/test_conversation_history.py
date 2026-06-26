@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from interactive_shell.state.conversation_history import (
+from interactive_shell.harness.state.conversation_history import (
     MAX_CONVERSATION_MESSAGES,
     MAX_CONVERSATION_TURNS,
     NO_HISTORY_PLACEHOLDER,

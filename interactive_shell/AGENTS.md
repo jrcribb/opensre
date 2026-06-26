@@ -26,8 +26,7 @@ should be predictable, interruptible, explainable, and safe by default.
 | `chat/` | assistant/help/follow-up answer surfaces and shared LLM prompt rules | direct mutation of runtime state outside the action executor |
 | `references/` | CLI/docs/source/AGENTS reference loading and caching | generated model prose |
 | `config/` | interactive-shell config loading and tool catalog metadata | global app config unrelated to the REPL |
-| `state/` | conversation context helpers and shared state persistence | prompt rendering |
-| `history/` | prompt history policy and persistence | prompt rendering |
+| `harness/state/` | conversation context helpers and shared state persistence | prompt rendering |
 | `ui/` | Rich/prompt-toolkit rendering, theme, menus, streaming output, and domain views such as `incoming_alerts.py` (receiver/queue/listener lifecycle lives in `core.domain.alerts.inbox`) | business logic or network calls |
 
 When a change crosses these boundaries, prefer extracting a small helper in the

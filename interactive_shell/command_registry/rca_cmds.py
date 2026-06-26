@@ -14,7 +14,7 @@ from interactive_shell.command_registry.investigation import (
 )
 from interactive_shell.command_registry.types import ExecutionTier, SlashCommand
 from interactive_shell.runtime import ReplSession
-from interactive_shell.state.sessions.store import SessionStore
+from interactive_shell.harness.state.sessions.store import SessionStore
 from interactive_shell.ui import (
     BOLD_BRAND,
     DIM,

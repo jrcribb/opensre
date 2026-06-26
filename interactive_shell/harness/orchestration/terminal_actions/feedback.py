@@ -6,7 +6,7 @@ from rich.console import Console
 from rich.markup import escape
 
 from interactive_shell.runtime import ReplSession
-from interactive_shell.state.conversation_history import MAX_CONVERSATION_MESSAGES
+from interactive_shell.harness.state.conversation_history import MAX_CONVERSATION_MESSAGES
 from interactive_shell.ui.streaming import render_response_header
 
 

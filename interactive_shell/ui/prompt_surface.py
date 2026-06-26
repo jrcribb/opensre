@@ -27,7 +27,7 @@ from interactive_shell.harness.command_dispatch.catalog import (
     BARE_COMMAND_ALIASES,
 )
 from interactive_shell.runtime import ReplSession
-from interactive_shell.state.history import load_prompt_history
+from interactive_shell.harness.state.history import load_prompt_history
 from interactive_shell.ui.banner_state import integration_display_name
 from interactive_shell.ui.choice_menu import repl_tty_interactive
 from platform.terminal import theme as ui_theme

@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from config.version import get_version
-from interactive_shell.state.sessions.protocol import SessionPersistenceSource
+from interactive_shell.harness.state.sessions.protocol import SessionPersistenceSource
 
 _NAME_MAX_CHARS = 50
 _TRIGGER_MAX_CHARS = 200

@@ -1577,14 +1577,14 @@ class TestResumeCommand:
         from unittest.mock import patch
 
         from interactive_shell.command_registry.session_cmds import _apply_resume_data
-        from interactive_shell.state.sessions.store import SessionStore
+        from interactive_shell.harness.state.sessions.store import SessionStore
 
         session = ReplSession()
         old_id = session.session_id
         target_id = "old-abc-1234567890"
 
         with patch(
-            "interactive_shell.state.sessions.store._sessions_dir",
+            "interactive_shell.harness.state.sessions.store._sessions_dir",
             return_value=tmp_path,
         ):
             SessionStore.open_session(session)
@@ -1681,7 +1681,7 @@ class TestResumeCommand:
         from unittest.mock import patch
 
         from interactive_shell.command_registry.session_cmds import _apply_resume_data
-        from interactive_shell.state.sessions.store import SessionStore
+        from interactive_shell.harness.state.sessions.store import SessionStore
 
         data = {
             "session_id": "display-test-abc123456789",
@@ -1702,7 +1702,7 @@ class TestResumeCommand:
         console, buf = _capture()
 
         with patch(
-            "interactive_shell.state.sessions.store._sessions_dir",
+            "interactive_shell.harness.state.sessions.store._sessions_dir",
             return_value=tmp_path,
         ):
             SessionStore.open_session(session)

@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from interactive_shell.state.conversation_history import format_recent_conversation
+from interactive_shell.harness.state.conversation_history import format_recent_conversation
 
 from .constants import _MAX_TEXT_LEN
 from .system_prompt import _SYSTEM_PROMPT_BASE
