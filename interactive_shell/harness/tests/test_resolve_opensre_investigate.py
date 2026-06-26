@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from interactive_shell.harness.command_dispatch import (
+from interactive_shell.harness.orchestration.command_dispatch import (
     deterministic_command_text,
     opensre_investigate_slash_text,
 )

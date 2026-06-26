@@ -9,7 +9,7 @@ from typing import NotRequired, TypedDict, cast
 import pytest
 
 from interactive_shell.command_registry import SLASH_COMMANDS
-from interactive_shell.harness.command_dispatch import (
+from interactive_shell.harness.orchestration.command_dispatch import (
     deterministic_command_text,
 )
 from interactive_shell.harness.orchestration.feature_flags import (

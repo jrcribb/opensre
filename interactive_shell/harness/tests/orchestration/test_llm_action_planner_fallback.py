@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from integrations.llm_cli.failure_explain import is_context_length_overflow
-from interactive_shell.harness.errors import PlannerLLMError
+from interactive_shell.harness.domain.errors import PlannerLLMError
 from interactive_shell.harness.orchestration.llm_action_planner.planner import (
     plan_actions_with_llm_result,
 )

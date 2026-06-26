@@ -7,6 +7,7 @@ import io
 import pytest
 from rich.console import Console
 
+from interactive_shell.harness.domain.types import RouteKind
 from interactive_shell.harness.orchestration.agent_actions import (
     TerminalActionExecutionResult,
 )
@@ -22,7 +23,6 @@ from interactive_shell.harness.orchestration.tools import (
 from interactive_shell.harness.orchestration.tools import (
     slash_tool as _slash_tool,
 )
-from interactive_shell.harness.types import RouteKind
 from interactive_shell.runtime import dispatch as loop_dispatch
 from interactive_shell.runtime import execution as loop_execution
 from interactive_shell.runtime.session import ReplSession

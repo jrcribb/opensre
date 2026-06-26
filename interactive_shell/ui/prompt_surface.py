@@ -23,7 +23,7 @@ from rich.text import Text
 from interactive_shell.command_registry import SLASH_COMMANDS
 from interactive_shell.command_registry.help import QUICK_ACCESS_COMMANDS
 from interactive_shell.command_registry.types import SlashCommand
-from interactive_shell.harness.command_dispatch.catalog import (
+from interactive_shell.harness.orchestration.command_dispatch.catalog import (
     BARE_COMMAND_ALIASES,
 )
 from interactive_shell.runtime import ReplSession

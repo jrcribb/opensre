@@ -28,7 +28,7 @@ from __future__ import annotations
 import re
 import shlex
 
-from interactive_shell.harness.command_dispatch.catalog import (
+from interactive_shell.harness.orchestration.command_dispatch.catalog import (
     BARE_COMMAND_ALIAS_MAP,
     BARE_COMMAND_ALIASES,
     BARE_COMMAND_ALIASES_WITH_ARGS,

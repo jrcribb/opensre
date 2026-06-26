@@ -68,7 +68,7 @@ def _call_llm(sanitised_text: str, session: Any) -> str | None:
         # Raise a typed error so the caller can surface the reason in the
         # assistant block instead of printing a raw log warning above it.
         from config.config import llm_provider_error_context
-        from interactive_shell.harness.errors import (
+        from interactive_shell.harness.domain.errors import (
             PlannerLLMError,
         )
 

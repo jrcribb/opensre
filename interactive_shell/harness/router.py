@@ -11,7 +11,7 @@ without calling the LLM.
 
 from __future__ import annotations
 
-from interactive_shell.harness.types import (
+from interactive_shell.harness.domain.types import (
     RouteDecision,
     RouteKind,
     RoutingSession,

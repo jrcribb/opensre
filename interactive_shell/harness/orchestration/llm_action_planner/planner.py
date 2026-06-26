@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from integrations.llm_cli.failure_explain import is_context_length_overflow
-from interactive_shell.harness.errors import PlannerLLMError
+from interactive_shell.harness.domain.errors import PlannerLLMError
 from interactive_shell.harness.orchestration.interaction_models import (
     PlannedAction,
 )

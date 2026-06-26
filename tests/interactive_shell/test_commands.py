@@ -1752,7 +1752,7 @@ class TestResumeCommand:
         """PlannerLLMError must be added to cli_agent_messages so /resume can show it."""
         from unittest.mock import patch
 
-        from interactive_shell.harness.errors import (
+        from interactive_shell.harness.domain.errors import (
             PlannerLLMError,
         )
         from interactive_shell.harness.orchestration.agent_actions import (

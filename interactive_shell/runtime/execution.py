@@ -14,7 +14,7 @@ from interactive_shell.command_registry import dispatch_slash
 from interactive_shell.harness.pipeline import (
     handle_message_with_agent,
 )
-from interactive_shell.harness.types import RouteDecision
+from interactive_shell.harness.domain.types import RouteDecision
 from interactive_shell.runtime.session import ReplSession
 from interactive_shell.utils.telemetry import LlmRunInfo, PromptRecorder
 from platform.analytics.events import Event

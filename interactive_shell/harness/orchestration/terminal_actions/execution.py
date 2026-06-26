@@ -7,7 +7,7 @@ from typing import Any
 
 from rich.console import Console
 
-from interactive_shell.harness.errors import PlannerLLMError
+from interactive_shell.harness.domain.errors import PlannerLLMError
 from interactive_shell.runtime import ReplSession
 
 from .dispatch import execute_planned_actions

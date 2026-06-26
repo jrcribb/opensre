@@ -14,7 +14,7 @@ from rich.console import Console
 from rich.markup import escape
 
 from config.llm_reasoning_effort import apply_reasoning_effort
-from interactive_shell.harness.command_dispatch import (
+from interactive_shell.harness.orchestration.command_dispatch import (
     deterministic_command_text,
 )
 from interactive_shell.harness.orchestration.agent_actions import (
