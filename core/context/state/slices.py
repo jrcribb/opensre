@@ -1,13 +1,13 @@
-"""Chat-mode slice for :class:`~context.state.models.AgentState`.
+"""Chat-mode slice for :class:`~core.context.state.models.AgentState`.
 
-Investigation pipeline slices live in :mod:`context.state.runtime_slices`.
+Investigation pipeline slices live in :mod:`core.context.state.runtime_slices`.
 """
 
 from __future__ import annotations
 
 from typing_extensions import TypedDict
 
-from context.state.runtime_slices import (
+from core.context.state.runtime_slices import (
     AlertInputSlice,
     DeliveryContextSlice,
     DeliveryOutputSlice,

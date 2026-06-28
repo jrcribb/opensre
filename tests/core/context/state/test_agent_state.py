@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from context.state import (
+from core.context.state import (
     MAX_CONVERSATION_MESSAGES,
     AgentStateError,
     MutableAgentState,

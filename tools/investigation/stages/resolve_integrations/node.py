@@ -8,7 +8,7 @@ import logging
 import os
 from typing import Any
 
-from context.state import InvestigationState
+from core.context.state import InvestigationState
 from integrations.catalog import (
     classify_integrations as _classify_integrations,
 )

@@ -7,7 +7,7 @@ import logging
 import time
 from typing import Any, cast
 
-from context.state import InvestigationState
+from core.context.state import InvestigationState
 from core.domain.alerts.extraction import (
     AlertDetails,
     enrich_raw_alert,

@@ -13,7 +13,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Any
 
-from context.state import AgentState
+from core.context.state import AgentState
 from core.llm import llm_client as llm_mod
 from tests.benchmarks.toolcall_model_benchmark.pricing import estimate_run_cost_usd
 from tests.synthetic.rds_postgres.run_suite import _build_resolved_integrations

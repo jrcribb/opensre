@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from context.state import InvestigationState
+from core.context.state import InvestigationState
 
 
 def safe_get(data: dict[str, Any] | None, *keys: str, default: Any = None) -> Any:

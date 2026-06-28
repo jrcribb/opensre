@@ -19,8 +19,7 @@ Before any push or PR creation follow **[CI.md](CI.md)** — lint, format, typec
 
 | Path                  | What it does                                                                                       |
 | --------------------- | -------------------------------------------------------------------------------------------------- |
-| `core/`               | Investigation orchestration, the shared runtime tool-calling loop, and domain logic (state, types, correlation rules). |
-| `context/`            | First-class top-level home for context assembly, budgets, trimming, and evidence envelopes shared by agents. |
+| `core/`               | Investigation orchestration, context assembly, the shared runtime tool-calling loop, and domain logic (state, types, correlation rules). |
 | `cli/`                | Command-line interface, onboarding wizard, local LLM helpers, and CLI tests support.               |
 | `interactive_shell/`  | Interactive terminal (REPL) loop, slash commands, chat/help surfaces, action-planning harness, and terminal UI. |
 | `integrations/`       | Per-integration config normalization, verification, clients, helpers, store/catalog logic, and the Hermes log pipeline. |
@@ -49,7 +48,7 @@ Main packages one level deeper:
 - `cli/` — Command-line interface, onboarding wizard, local LLM helpers, and CLI tests support.
 - `interactive_shell/` — Interactive terminal (TTY) loop, slash-command surface, chat/help handoff, session runtime, and terminal UI. REPL watchdog slash commands (`/watch`, `/watches`, `/unwatch`): PR demo steps live under **Interactive shell: REPL watchdog demo** in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#interactive-shell-repl-watchdog-demo).
 - `config/constants/` — Shared prompt and other static constants.
-- `context/` — First-class context assembly boundary for building, trimming, ranking, and packaging incident evidence before agent/runtime consumption.
+- `core/context/` — Context assembly boundary for building, trimming, ranking, and packaging incident evidence before agent/runtime consumption.
 - `infra/deployment/` — Single top-level home for deployment-facing code, split by concern:
     - `infra/deployment/entrypoints/` — SDK and MCP entrypoints exposed to external runtimes.
     - `infra/deployment/operations/` — _Runtime / infra_ around a deployment (health polling, EC2 output files, provider dry-run validation).
@@ -63,7 +62,7 @@ Main packages one level deeper:
 - `core/` — Shared LLM tool-calling loop (execute tools, message shaping, context budget).
 - `core/llm/` — Hosted LLM provider clients, retry/schema helpers, and investigation tool-calling adapters.
 - `platform/sandbox/` — Sandboxed execution helpers for controlled runtime actions.
-- `context/state/` — Shared agent runtime envelope (`AgentState`), chat slice, investigation pipeline slice contracts, `EvidenceEntry`, state-update helpers, and pure defaults.
+- `core/context/state/` — Shared agent runtime envelope (`AgentState`), chat slice, investigation pipeline slice contracts, `EvidenceEntry`, state-update helpers, and pure defaults.
 - `tools/` — Tool registry, decorator, base classes, per-tool packages, shared utilities, and registry helpers.
 - `core/domain/types/` — Shared typed contracts for evidence, retrieval, and tool-related payloads.
 - `platform/` — Guardrails, masking, sandbox, analytics, auth, and cross-cutting platform services (e.g. `platform/notifications/telegram_delivery.py`).
@@ -104,13 +103,13 @@ Investigations are coordinated in `tools/investigation/lifecycle.py` and exposed
 Files to touch:
 
 - `tools/investigation/lifecycle.py` for high-level stage ordering.
-- `context/` for shared context assembly, trimming, ranking, and evidence-envelope logic
+- `core/context/` for shared context assembly, trimming, ranking, and evidence-envelope logic
   that runs before agent/runtime consumption.
 - `core/domain/` for pure investigation rules (alert source mapping, tool planning,
   category alignment, correlation scoring).
 - `core/` for shared LLM runtime helpers (tool loop and LLM invoke error
   classification).
-- `context/state/*.py` when adding or renaming persisted investigation fields
+- `core/context/state/*.py` when adding or renaming persisted investigation fields
   (update `AgentStateModel` and the matching slice).
 - `docs/` — update or add a page if the change introduces user-visible behavior or configuration.
 - `tests/` coverage for the affected CLI, synthetic, or integration paths.

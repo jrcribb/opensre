@@ -6,7 +6,9 @@ runtime requests without exposing live mutable internals.
 
 from __future__ import annotations
 
-from context.state.agent_state import (
+from core.context.state.agent_state import (
+    MAX_CONVERSATION_MESSAGES,
+    MAX_CONVERSATION_TURNS,
     AgentContextInput,
     AgentMessageRole,
     AgentModelInfo,
@@ -14,20 +16,18 @@ from context.state.agent_state import (
     AgentStateChange,
     AgentStateError,
     AgentStateSnapshot,
-    MAX_CONVERSATION_MESSAGES,
-    MAX_CONVERSATION_TURNS,
     MutableAgentState,
     create_mutable_agent_state,
 )
-from context.state.evidence import EvidenceEntry
-from context.state.models import (
+from core.context.state.evidence import EvidenceEntry
+from core.context.state.models import (
     AgentState,
     AgentStateModel,
     InvestigationState,
     make_chat_state,
     model_default_payload,
 )
-from context.state.runtime_slices import (
+from core.context.state.runtime_slices import (
     AlertInputSlice,
     DeliveryContextSlice,
     DeliveryOutputSlice,
@@ -38,9 +38,9 @@ from context.state.runtime_slices import (
     MaskingSlice,
     SessionContext,
 )
-from context.state.slices import ChatStateSlice
-from context.state.types import AgentMode, ChatMessage, ChatMessageModel
-from context.state.updates import apply_state_updates
+from core.context.state.slices import ChatStateSlice
+from core.context.state.types import AgentMode, ChatMessage, ChatMessageModel
+from core.context.state.updates import apply_state_updates
 
 __all__ = [
     "AgentContextInput",

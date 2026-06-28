@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
-from context.state import MutableAgentState
+from core.context.state import MutableAgentState
 
 # Turn kinds that represent user-initiated chat messages. ReplSession.record()
 # is called with the turn kind, not a normalized "chat" label, so this set must

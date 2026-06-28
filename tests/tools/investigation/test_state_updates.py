@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from context.state import AgentState
-from context.state.updates import apply_state_updates
+from core.context.state import AgentState
+from core.context.state.updates import apply_state_updates
 
 
 def test_apply_state_updates_last_write_wins() -> None:

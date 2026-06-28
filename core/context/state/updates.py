@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, cast
 
-from context.state.models import AgentState
+from core.context.state.models import AgentState
 
 
 def apply_state_updates(state: AgentState, updates: Mapping[str, Any] | None) -> None:

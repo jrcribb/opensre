@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-import context
+import importlib.util
+
+import core.context as context
 
 
 def test_context_package_has_no_shell_prompt_exports() -> None:
-    """Top-level context should not expose shell prompt/runtime request helpers."""
+    """Core context should not expose shell prompt/runtime request helpers."""
     forbidden_exports = {
         "AgentContext",
         "SYSTEM_PROMPT_BASE",
@@ -17,3 +19,8 @@ def test_context_package_has_no_shell_prompt_exports() -> None:
 
     assert context.__all__ == []
     assert forbidden_exports.isdisjoint(vars(context))
+
+
+def test_top_level_context_package_is_removed() -> None:
+    """The canonical import path is core.context, with no compatibility shim."""
+    assert importlib.util.find_spec("context") is None

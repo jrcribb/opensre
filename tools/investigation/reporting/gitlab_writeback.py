@@ -3,7 +3,7 @@
 import logging
 import os
 
-from context.state import InvestigationState
+from core.context.state import InvestigationState
 from integrations.gitlab import build_gitlab_config, post_gitlab_mr_note
 from platform.common.truncation import truncate
 
