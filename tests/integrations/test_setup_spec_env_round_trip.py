@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import dataclasses
 import functools
+import os
 from pathlib import Path
 from typing import Any
 
@@ -41,10 +42,13 @@ from integrations.pagerduty.setup import PAGERDUTY_SETUP
 from integrations.posthog.setup import POSTHOG_SETUP
 from integrations.sentry.setup import SENTRY_SETUP
 from integrations.signoz.setup import SIGNOZ_SETUP
+from integrations.smtp.setup import SMTP_SETUP
 from integrations.telegram.setup import TELEGRAM_SETUP
+from integrations.tempo.setup import TEMPO_SETUP
 from integrations.temporal.setup import TEMPORAL_SETUP
 from integrations.tracer.setup import TRACER_SETUP
 from integrations.vercel.setup import VERCEL_SETUP
+from integrations.whatsapp.setup import WHATSAPP_SETUP
 
 # A distinct, recognizable value per field, so two fields of the same
 # integration swapping places fails instead of coincidentally matching. Values
@@ -114,6 +118,28 @@ _SUBMITTED: dict[str, dict[str, str]] = {
         "kubeconfig": "/home/ci/.kube/config",
         "default_namespace": "checkout",
     },
+    "smtp": {
+        "host": "smtp.eu.example.com",
+        "port": "2525",
+        "security": "ssl",
+        "username": "reports@example.com",
+        "password": "smtp-secret",
+        "from_address": "reports@example.com",
+        "default_to": "oncall@example.com",
+    },
+    "whatsapp": {
+        "account_sid": "AC-checkout-sid",
+        "auth_token": "twilio-auth-token",
+        "from_number": "whatsapp:+14155238886",
+        "default_to": "+15551234567",
+    },
+    "tempo": {
+        "url": "https://tempo.eu.example.com",
+        "api_key": "tempo-bearer-token",
+        "username": "tempo-user",
+        "password": "tempo-password",
+        "org_id": "checkout-tenant",
+    },
 }
 
 # Helm's env-only catalog discovery additionally gates on ``OSRE_HELM_INTEGRATION``
@@ -138,10 +164,13 @@ _SPECS = [
     POSTHOG_SETUP,
     SENTRY_SETUP,
     SIGNOZ_SETUP,
+    SMTP_SETUP,
     TELEGRAM_SETUP,
+    TEMPO_SETUP,
     TEMPORAL_SETUP,
     TRACER_SETUP,
     VERCEL_SETUP,
+    WHATSAPP_SETUP,
 ]
 
 
@@ -172,13 +201,38 @@ def persisted(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> _Persisted:
     return written
 
 
+# Left in place by the wipe below: process/runtime plumbing that unrelated
+# code (subprocess calls, a keyring backend resolving a config path under
+# $HOME) may need, and that no vendor's env_var is ever named after. Keeping
+# this list short and explicit — rather than only clearing known vendor names
+# — is what lets the wipe still catch a *wrong* env_var: the credential names
+# are exactly what must be guaranteed absent unless apply_setup wrote them.
+_ENV_PLUMBING = frozenset({"HOME", "PATH", "TMPDIR", "TMP", "TEMP", "LANG", "LC_ALL", "USER"})
+
+
 def _restore_environment(written: _Persisted, monkeypatch: pytest.MonkeyPatch) -> None:
     """Reproduce the environment a later process would start with.
+
+    Every existing env var is cleared first (aside from ``_ENV_PLUMBING``).
+    ``tests/conftest.py`` loads the developer's real local ``.env`` into
+    ``os.environ`` for the whole test session, so without this a spec whose
+    ``env_var`` is wrong can still "round-trip" — not from what this test just
+    persisted, but from a same-named value already sitting in that real
+    ``.env`` (Twilio's shared account vars are a real example: a wrong
+    ``env_var`` still resolved because the correct name happened to already be
+    set for real).
 
     Keyring secrets are seeded straight into ``os.environ`` because
     ``resolve_env_credential`` checks the environment first — which is what a
     deploy, and this assertion, ultimately depend on.
     """
+    for key in list(os.environ):
+        if key not in _ENV_PLUMBING:
+            monkeypatch.delenv(key, raising=False)
+    # The wipe above also removes the root conftest's OPENSRE_DISABLE_KEYRING;
+    # put it back so an unset field falling through to resolve_keyring_secret
+    # still misses cleanly instead of touching a real OS keyring.
+    monkeypatch.setenv("OPENSRE_DISABLE_KEYRING", "1")
     for key, value in written.secrets.items():
         monkeypatch.setenv(key, value)
     for line in read_env_lines(written.env_path):
@@ -231,7 +285,18 @@ def test_persisted_credentials_are_read_back_by_the_catalog(
 
     resolved = _catalog_credentials(spec.service)
     for field in spec.fields:
-        assert resolved.get(field.name) == submitted[field.name], (
+        actual = resolved.get(field.name)
+        # Missing catalog keys must fail even if a future ``_SUBMITTED`` entry
+        # accidentally uses the literal string ``"None"`` (``str(None) == "None"``).
+        assert actual is not None, (
+            f"{spec.service}.{field.name} was persisted as {field.env_var!r}, "
+            "which the catalog does not read back into that credential"
+        )
+        # str(...) on both sides: env vars are always strings, and a config
+        # model may legitimately coerce one back to a number (SMTP's port) —
+        # that is a type normalization, not the persistence bug this test
+        # guards against.
+        assert str(actual) == str(submitted[field.name]), (
             f"{spec.service}.{field.name} was persisted as {field.env_var!r}, "
             "which the catalog does not read back into that credential"
         )

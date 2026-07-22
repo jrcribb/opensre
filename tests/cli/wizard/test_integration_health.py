@@ -44,7 +44,6 @@ def test_legacy_integration_health_import_surface_still_exports_validators() -> 
         "validate_servicenow_integration",
         "validate_slack_webhook",
         "validate_splunk_integration",
-        "validate_tempo_integration",
     }
 
     assert set(module.__all__) == expected_exports

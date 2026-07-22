@@ -41,9 +41,12 @@ import integrations.posthog.setup as posthog_setup
 import integrations.sentry.setup as sentry_setup
 import integrations.setup_flow as setup_flow
 import integrations.signoz.setup as signoz_setup
+import integrations.smtp.setup as smtp_setup
+import integrations.tempo.setup as tempo_setup
 import integrations.temporal.setup as temporal_setup
 import integrations.tracer.setup as tracer_setup
 import integrations.vercel.setup as vercel_setup
+import integrations.whatsapp.setup as whatsapp_setup
 
 _ANSWERS: dict[str, dict[str, str]] = {
     "datadog": {"api_key": "dd-api-key", "app_key": "dd-app-key", "site": "datadoghq.eu"},
@@ -108,6 +111,28 @@ _ANSWERS: dict[str, dict[str, str]] = {
         "kubeconfig": "/home/ci/.kube/config",
         "default_namespace": "checkout",
     },
+    "smtp": {
+        "host": "smtp.eu.example.com",
+        "from_address": "reports@example.com",
+        "port": "2525",
+        "security": "ssl",
+        "username": "reports@example.com",
+        "password": "smtp-secret",
+        "default_to": "oncall@example.com",
+    },
+    "whatsapp": {
+        "account_sid": "AC-checkout-sid",
+        "auth_token": "twilio-auth-token",
+        "from_number": "whatsapp:+14155238886",
+        "default_to": "+15551234567",
+    },
+    "tempo": {
+        "url": "https://tempo.eu.example.com",
+        "api_key": "tempo-bearer-token",
+        "username": "tempo-user",
+        "password": "tempo-password",
+        "org_id": "checkout-tenant",
+    },
 }
 
 # (spec module, spec attribute, CLI handler) — the attribute is patched rather
@@ -132,6 +157,9 @@ _CASES = [
     pytest.param(dagster_setup, "DAGSTER_SETUP", cli._setup_dagster, id="dagster"),
     pytest.param(temporal_setup, "TEMPORAL_SETUP", cli._setup_temporal, id="temporal"),
     pytest.param(helm_setup, "HELM_SETUP", cli._setup_helm, id="helm"),
+    pytest.param(smtp_setup, "SMTP_SETUP", cli._setup_smtp, id="smtp"),
+    pytest.param(whatsapp_setup, "WHATSAPP_SETUP", cli._setup_whatsapp, id="whatsapp"),
+    pytest.param(tempo_setup, "TEMPO_SETUP", cli._setup_tempo, id="tempo"),
 ]
 
 # HELM_SETUP has no field that is both required and defaultless (``helm_path``
