@@ -25,12 +25,15 @@ from typing import Any
 
 import pytest
 
+import integrations.alertmanager.setup as alertmanager_setup
+import integrations.azure_sql.setup as azure_sql_setup
 import integrations.betterstack.setup as betterstack_setup
 import integrations.cli as cli
 import integrations.coralogix.setup as coralogix_setup
 import integrations.dagster.setup as dagster_setup
 import integrations.datadog.setup as datadog_setup
 import integrations.gitlab.setup as gitlab_setup
+import integrations.grafana.setup as grafana_setup
 import integrations.groundcover.setup as groundcover_setup
 import integrations.helm.setup as helm_setup
 import integrations.honeycomb.setup as honeycomb_setup
@@ -41,16 +44,19 @@ import integrations.mongodb.setup as mongodb_setup
 import integrations.mongodb_atlas.setup as mongodb_atlas_setup
 import integrations.mysql.setup as mysql_setup
 import integrations.openclaw.setup as openclaw_setup
+import integrations.opensearch.setup as opensearch_setup
 import integrations.pagerduty.setup as pagerduty_setup
 import integrations.postgresql.setup as postgresql_setup
 import integrations.posthog.setup as posthog_setup
 import integrations.posthog_mcp.setup as posthog_mcp_setup
+import integrations.rds.setup as rds_setup
 import integrations.redis.setup as redis_setup
 import integrations.sentry.setup as sentry_setup
 import integrations.sentry_mcp.setup as sentry_mcp_setup
 import integrations.servicenow.setup as servicenow_setup
 import integrations.setup_flow as setup_flow
 import integrations.signoz.setup as signoz_setup
+import integrations.slack.setup as slack_setup
 import integrations.smtp.setup as smtp_setup
 import integrations.tempo.setup as tempo_setup
 import integrations.temporal.setup as temporal_setup
@@ -209,6 +215,43 @@ _ANSWERS: dict[str, dict[str, str]] = {
         "db": "2",
         "ssl": "true",
     },
+    "azure_sql": {
+        "server": "checkout.database.windows.net",
+        "database": "checkout",
+        "port": "1433",
+        "username": "opensre",
+        "password": "azure-sql-password",
+        "driver": "ODBC Driver 18 for SQL Server",
+        "encrypt": "true",
+    },
+    "grafana": {
+        "endpoint": "https://checkout.grafana.net",
+        "api_key": "glsa_grafana_token",
+        "verify_ssl": "true",
+        "ca_bundle": "/etc/ssl/certs/checkout-ca.pem",
+    },
+    "alertmanager": {
+        # Bearer XOR basic — catalog rejects both together.
+        "base_url": "https://alertmanager.checkout.internal",
+        "bearer_token": "am-bearer",
+        "username": "",
+        "password": "",
+    },
+    "opensearch": {
+        "url": "https://opensearch.checkout.internal:9200",
+        "api_key": "os-api-key",
+        "username": "",
+        "password": "",
+    },
+    "rds": {
+        "db_instance_identifier": "checkout-prod",
+        "region": "eu-west-1",
+    },
+    "slack": {
+        "webhook_url": "https://hooks.slack.com/services/T/B/xxx",
+        "bot_token": "xoxb-test-bot-token",
+        "app_token": "xapp-test-app-token",
+    },
 }
 
 # (spec module, spec attribute, CLI handler) — the attribute is patched rather
@@ -247,6 +290,11 @@ _CASES = [
     pytest.param(mariadb_setup, "MARIADB_SETUP", cli._setup_mariadb, id="mariadb"),
     pytest.param(mongodb_setup, "MONGODB_SETUP", cli._setup_mongodb, id="mongodb"),
     pytest.param(redis_setup, "REDIS_SETUP", cli._setup_redis, id="redis"),
+    pytest.param(azure_sql_setup, "AZURE_SQL_SETUP", cli._setup_azure_sql, id="azure_sql"),
+    pytest.param(grafana_setup, "GRAFANA_SETUP", cli._setup_grafana, id="grafana"),
+    pytest.param(rds_setup, "RDS_SETUP", cli._setup_rds, id="rds"),
+    # alertmanager, opensearch, and slack drive a mode picker rather than flat
+    # linear prompts, so they get dedicated tests below instead of _CASES.
 ]
 
 
@@ -267,6 +315,9 @@ class _Run:
 @pytest.fixture
 def run(monkeypatch: pytest.MonkeyPatch) -> _Run:
     state = _Run()
+    # Prefill reads the store; keep it empty so prompt defaults come from the
+    # spec, not whatever the developer's real store happens to hold.
+    monkeypatch.setattr("integrations.store.get_integration", lambda _service: None)
     monkeypatch.setattr(
         setup_flow,
         "upsert_integration",
@@ -293,7 +344,8 @@ def _expected_credentials(
         if field.is_constant:
             credentials[field.name] = field.constant
         else:
-            credentials[field.name] = answers[field.name]
+            # apply_setup stores blank optional answers as None, not "".
+            credentials[field.name] = answers[field.name] or None
     return credentials
 
 
@@ -411,3 +463,193 @@ def test_blank_required_field_exits_before_the_next_prompt(
 
     assert len(run.asked) == 1 + [f.name for f in prompted].index(first_required.name)
     assert (run.verified, run.store) == ([], [])
+
+
+# --- Mode-picker integrations (Slack, Alertmanager, OpenSearch) ----------------
+#
+# These drive a picker rather than flat prompts: the chosen mode decides which
+# fields are asked, and a field belonging to another mode is cleared (stored as
+# None), not left over from a previous run. apply_setup itself never sees the
+# mode — the picker is purely a collection concern — so the store, keyring, and
+# env assertions below exercise the collector, not apply_setup.
+
+
+def _drive_picker(
+    monkeypatch: pytest.MonkeyPatch,
+    run: _Run,
+    module: Any,
+    attr: str,
+    handler: Any,
+    *,
+    mode: str,
+    values: dict[str, str],
+    stored: dict[str, Any] | None = None,
+) -> None:
+    """Choose *mode* in the picker and answer the fields it collects.
+
+    A blank entry in *values* simulates pressing enter, so the field lands on
+    its prompt default (the stored value, if any) — the way the real ``_p``
+    behaves.
+    """
+
+    def _fake_verify(_source: str, config: dict[str, Any]) -> dict[str, str]:
+        run.verified.append(dict(config))
+        return {"status": run.verify_status, "detail": run.verify_detail}
+
+    spec = dataclasses.replace(getattr(module, attr), verify=_fake_verify)
+    monkeypatch.setattr(module, attr, spec)
+    if stored is not None:
+        monkeypatch.setattr(
+            "integrations.store.get_integration", lambda _s: {"credentials": stored}
+        )
+
+    monkeypatch.setattr(cli, "_select", lambda *_a, **_k: mode)
+
+    prompted = [f for f in spec.collectable_fields(mode) if not f.is_constant]
+    answers = iter(values.get(f.name, "") for f in prompted)
+
+    def _fake_p(label: str, default: str = "", secret: bool = False) -> str:
+        run.asked.append((label, default, secret))
+        return next(answers, "") or default
+
+    monkeypatch.setattr(cli, "_p", _fake_p)
+    handler()
+
+
+def test_slack_webhook_mode_clears_socket_tokens(
+    monkeypatch: pytest.MonkeyPatch, run: _Run
+) -> None:
+    hook = "https://hooks.slack.com/services/T/B/x"
+    _drive_picker(
+        monkeypatch,
+        run,
+        slack_setup,
+        "SLACK_SETUP",
+        cli._setup_slack,
+        mode="webhook",
+        values={"webhook_url": hook},
+    )
+    assert run.store == [
+        ("slack", {"credentials": {"webhook_url": hook, "bot_token": None, "app_token": None}})
+    ]
+    # Webhook is store-only (no env_var). The unchosen socket tokens clear their
+    # keyring slots so a prior Socket Mode setup does not linger in the env.
+    assert dict(run.keyring) == {"SLACK_BOT_TOKEN": "", "SLACK_APP_TOKEN": ""}
+
+
+def test_slack_both_mode_stores_all_three(monkeypatch: pytest.MonkeyPatch, run: _Run) -> None:
+    hook = "https://hooks.slack.com/services/T/B/x"
+    _drive_picker(
+        monkeypatch,
+        run,
+        slack_setup,
+        "SLACK_SETUP",
+        cli._setup_slack,
+        mode="both",
+        values={"webhook_url": hook, "bot_token": "xoxb-1", "app_token": "xapp-1"},
+    )
+    assert run.store == [
+        (
+            "slack",
+            {"credentials": {"webhook_url": hook, "bot_token": "xoxb-1", "app_token": "xapp-1"}},
+        )
+    ]
+
+
+def test_slack_both_mode_prefills_stored_tokens_on_rerun(
+    monkeypatch: pytest.MonkeyPatch, run: _Run
+) -> None:
+    """Re-running with 'both' and pressing enter keeps the stored credentials."""
+    stored = {
+        "webhook_url": "https://hooks.slack.com/services/T/B/x",
+        "bot_token": "xoxb-1",
+        "app_token": "xapp-1",
+    }
+    _drive_picker(
+        monkeypatch,
+        run,
+        slack_setup,
+        "SLACK_SETUP",
+        cli._setup_slack,
+        mode="both",
+        values={},
+        stored=stored,
+    )
+    assert run.store == [("slack", {"credentials": stored})]
+
+
+def test_alertmanager_none_mode_stores_url_only(monkeypatch: pytest.MonkeyPatch, run: _Run) -> None:
+    _drive_picker(
+        monkeypatch,
+        run,
+        alertmanager_setup,
+        "ALERTMANAGER_SETUP",
+        cli._setup_alertmanager,
+        mode="none",
+        values={"base_url": "https://am.internal"},
+    )
+    assert run.store == [
+        (
+            "alertmanager",
+            {
+                "credentials": {
+                    "base_url": "https://am.internal",
+                    "bearer_token": None,
+                    "username": None,
+                    "password": None,
+                }
+            },
+        )
+    ]
+
+
+def test_alertmanager_basic_mode_clears_bearer(monkeypatch: pytest.MonkeyPatch, run: _Run) -> None:
+    _drive_picker(
+        monkeypatch,
+        run,
+        alertmanager_setup,
+        "ALERTMANAGER_SETUP",
+        cli._setup_alertmanager,
+        mode="basic",
+        values={"base_url": "https://am.internal", "username": "ops", "password": "pw"},
+    )
+    assert run.store == [
+        (
+            "alertmanager",
+            {
+                "credentials": {
+                    "base_url": "https://am.internal",
+                    "bearer_token": None,
+                    "username": "ops",
+                    "password": "pw",
+                }
+            },
+        )
+    ]
+
+
+def test_opensearch_api_key_mode_clears_basic_auth(
+    monkeypatch: pytest.MonkeyPatch, run: _Run
+) -> None:
+    _drive_picker(
+        monkeypatch,
+        run,
+        opensearch_setup,
+        "OPENSEARCH_SETUP",
+        cli._setup_opensearch,
+        mode="api_key",
+        values={"url": "https://os.internal", "api_key": "k"},
+    )
+    assert run.store == [
+        (
+            "opensearch",
+            {
+                "credentials": {
+                    "url": "https://os.internal",
+                    "api_key": "k",
+                    "username": None,
+                    "password": None,
+                }
+            },
+        )
+    ]
